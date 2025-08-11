@@ -1,15 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronRight, Image as ImageIcon, Plus, Trash2, HelpCircle } from 'lucide-react';
-
-interface UploadedFile {
-  id: string;
-  name: string;
-  src: string;
-  size: number;
-  uploadedAt: Date;
-}
+import { ChevronRight, Image as ImageIcon, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { getTotalStorageUsed, getStorageUsagePercentage, formatStorageSize } from '@/utils';
+import { type UploadedFile } from '@/types';
 
 interface UploadedFilesSidebarProps {
   files: UploadedFile[];
@@ -19,6 +13,8 @@ interface UploadedFilesSidebarProps {
   onClearAll: () => void;
   maxFiles?: number;
   className?: string;
+  storageWarning?: string | null;
+  maxStorageSize?: number;
 }
 
 export default function UploadedFilesSidebar({
@@ -29,6 +25,8 @@ export default function UploadedFilesSidebar({
   onClearAll,
   maxFiles = 5,
   className = '',
+  storageWarning,
+  maxStorageSize,
 }: UploadedFilesSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -38,6 +36,12 @@ export default function UploadedFilesSidebar({
 
   const usedStorage = files.length;
   const storagePercentage = (usedStorage / maxFiles) * 100;
+
+  // Calculate actual storage size used using utility functions
+  const totalSizeUsed = getTotalStorageUsed(files);
+  const storageSizePercentage = maxStorageSize
+    ? getStorageUsagePercentage(files, maxStorageSize)
+    : 0;
 
   return (
     <>
@@ -70,7 +74,7 @@ export default function UploadedFilesSidebar({
             <h3 className='text-sm font-medium text-text-primary mb-3'>Uploaded Files</h3>
             <div className='h-full space-y-2'>
               {files.length === 0 ? (
-                <div className='flex-1 flex items-center justify-center h-full'>
+                <div className='flex-1 flex items-center justify-center h-64'>
                   <div className='text-center'>
                     <ImageIcon className='w-12 h-12 text-grey-300 mx-auto mb-2' />
                     <p className='text-sm text-grey-500'>No files uploaded yet</p>
@@ -96,7 +100,7 @@ export default function UploadedFilesSidebar({
                           {file.name}
                         </p>
                         <p className='text-xs text-text-secondary'>
-                          {(file.size / 1024 / 1024).toFixed(1)} MB
+                          {formatStorageSize(file.size)}
                         </p>
                       </div>
                       <button
@@ -130,13 +134,20 @@ export default function UploadedFilesSidebar({
               </button>
             </div>
 
+            {/* Storage Warning */}
+            {storageWarning && (
+              <div className='mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg'>
+                <div className='flex items-center gap-2 text-yellow-800'>
+                  <AlertTriangle className='w-4 h-4' />
+                  <span className='text-sm font-medium'>{storageWarning}</span>
+                </div>
+              </div>
+            )}
+
             {/* Storage Capacity Section */}
             <div className='flex flex-col gap-2'>
               <div className='flex items-center justify-between'>
                 <span className='text-sm font-medium text-text-primary'>Storage</span>
-                <span className='text-sm text-text-secondary'>
-                  {Math.round(storagePercentage)}% used
-                </span>
               </div>
               <div className='w-full bg-neutral-200 rounded-full h-2'>
                 <div
@@ -163,6 +174,16 @@ export default function UploadedFilesSidebar({
                   Clear All
                 </button>
               </div>
+
+              {/* Storage Size Information */}
+              {maxStorageSize && (
+                <div className='text-xs text-text-secondary text-center pt-2 border-t border-neutral-100'>
+                  <div className='flex items-center justify-between'>
+                    <span>Size: {formatStorageSize(totalSizeUsed)}</span>
+                    <span>{storageSizePercentage.toFixed(1)}% of 5MB</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
