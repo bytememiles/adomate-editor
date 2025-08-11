@@ -9,7 +9,5 @@ export const GOOGLE_FONTS_CONFIG = {
 
 // Validate API key is configured
 if (!GOOGLE_FONTS_CONFIG.API_KEY) {
-  console.warn(
-    'Google Fonts API key not configured. Set NEXT_PUBLIC_GFONTS_KEY in .env.local'
-  );
+  console.warn('Google Fonts API key not configured. Set NEXT_PUBLIC_GFONTS_KEY in .env.local');
 }

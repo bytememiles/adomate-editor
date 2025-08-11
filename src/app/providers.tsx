@@ -14,9 +14,5 @@ export default function Providers({ children }: ProvidersProps): React.JSX.Eleme
     store.dispatch(restoreFromStorage());
   }, []);
 
-  return (
-    <Provider store={store}>
-      {children}
-    </Provider>
-  );
+  return <Provider store={store}>{children}</Provider>;
 }

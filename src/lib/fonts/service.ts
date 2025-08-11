@@ -22,7 +22,7 @@ export async function fetchGoogleFonts(): Promise<GoogleFont[]> {
     if (cached) {
       const { data, timestamp } = JSON.parse(cached);
       const now = Date.now();
-      
+
       // Return cached data if still valid
       if (now - timestamp < GOOGLE_FONTS_CONFIG.CACHE_DURATION) {
         return data;
@@ -35,7 +35,7 @@ export async function fetchGoogleFonts(): Promise<GoogleFont[]> {
     }
 
     const response = await fetch(
-      `${GOOGLE_FONTS_CONFIG.API_URL}?key=${GOOGLE_FONTS_CONFIG.API_KEY}`
+      `${GOOGLE_FONTS_CONFIG.API_URL}?key=${GOOGLE_FONTS_CONFIG.API_KEY}`,
     );
 
     if (!response.ok) {
@@ -43,7 +43,7 @@ export async function fetchGoogleFonts(): Promise<GoogleFont[]> {
     }
 
     const result = await response.json();
-    
+
     // Transform to minimal format
     const fonts: GoogleFont[] = result.items.map((font: any) => ({
       family: font.family,
@@ -60,7 +60,7 @@ export async function fetchGoogleFonts(): Promise<GoogleFont[]> {
     return fonts;
   } catch (error) {
     console.error('Failed to fetch Google Fonts:', error);
-    
+
     // Return fallback fonts if API fails
     return [
       { family: 'Arial', variants: ['regular'] },
@@ -76,8 +76,8 @@ export async function fetchGoogleFonts(): Promise<GoogleFont[]> {
  * Ensure a Google Font is loaded and ready to use
  */
 export async function ensureFontLoaded(
-  family: string, 
-  weight: number = 400
+  family: string,
+  weight: number = 400,
 ): Promise<FontLoadStatus> {
   try {
     // Check if font is already loaded
@@ -88,7 +88,7 @@ export async function ensureFontLoaded(
     // Inject Google Fonts stylesheet
     const linkId = `google-font-${family.toLowerCase().replace(/\s+/g, '-')}`;
     let link = document.getElementById(linkId) as HTMLLinkElement;
-    
+
     if (!link) {
       link = document.createElement('link');
       link.id = linkId;
@@ -99,13 +99,13 @@ export async function ensureFontLoaded(
 
     // Wait for font to load
     await document.fonts.load(`${weight} 16px "${family}"`);
-    
+
     return { loaded: true };
   } catch (error) {
     console.warn(`Failed to load font "${family}":`, error);
-    return { 
-      loaded: false, 
-      error: `Failed to load font: ${error instanceof Error ? error.message : 'Unknown error'}` 
+    return {
+      loaded: false,
+      error: `Failed to load font: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
 }
@@ -114,11 +114,9 @@ export async function ensureFontLoaded(
  * Load multiple fonts simultaneously
  */
 export async function ensureFontsLoaded(
-  fonts: Array<{ family: string; weight?: number }>
+  fonts: Array<{ family: string; weight?: number }>,
 ): Promise<FontLoadStatus[]> {
-  const promises = fonts.map(({ family, weight = 400 }) => 
-    ensureFontLoaded(family, weight)
-  );
-  
+  const promises = fonts.map(({ family, weight = 400 }) => ensureFontLoaded(family, weight));
+
   return Promise.all(promises);
 }

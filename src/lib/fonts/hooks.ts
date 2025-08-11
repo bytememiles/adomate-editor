@@ -1,5 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
-import { fetchGoogleFonts, ensureFontLoaded, type GoogleFont, type FontLoadStatus } from './service';
+import {
+  fetchGoogleFonts,
+  ensureFontLoaded,
+  type GoogleFont,
+  type FontLoadStatus,
+} from './service';
 
 /**
  * Hook to manage Google Fonts catalog
@@ -12,7 +17,7 @@ export function useGoogleFonts() {
   const loadFonts = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const fontList = await fetchGoogleFonts();
       setFonts(fontList);
@@ -37,46 +42,55 @@ export function useFontLoader() {
   const [loadingFonts, setLoadingFonts] = useState<Set<string>>(new Set());
   const [fontErrors, setFontErrors] = useState<Map<string, string>>(new Map());
 
-  const loadFont = useCallback(async (family: string, weight: number = 400) => {
-    // Skip if already loading
-    if (loadingFonts.has(family)) {
-      return;
-    }
-
-    setLoadingFonts(prev => new Set(prev).add(family));
-    setFontErrors(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(family);
-      return newMap;
-    });
-
-    try {
-      const result = await ensureFontLoaded(family, weight);
-      
-      if (!result.loaded && result.error) {
-        setFontErrors(prev => new Map(prev).set(family, result.error!));
+  const loadFont = useCallback(
+    async (family: string, weight: number = 400) => {
+      // Skip if already loading
+      if (loadingFonts.has(family)) {
+        return;
       }
-    } catch (err) {
-      setFontErrors(prev => new Map(prev).set(family, 'Failed to load font'));
-    } finally {
-      setLoadingFonts(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(family);
-        return newSet;
+
+      setLoadingFonts((prev) => new Set(prev).add(family));
+      setFontErrors((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(family);
+        return newMap;
       });
-    }
-  }, [loadingFonts]);
 
-  const isFontLoading = useCallback((family: string) => {
-    return loadingFonts.has(family);
-  }, [loadingFonts]);
+      try {
+        const result = await ensureFontLoaded(family, weight);
 
-  const getFontError = useCallback((family: string) => {
-    return fontErrors.get(family);
-  }, [fontErrors]);
+        if (!result.loaded && result.error) {
+          setFontErrors((prev) => new Map(prev).set(family, result.error!));
+        }
+      } catch (err) {
+        setFontErrors((prev) => new Map(prev).set(family, 'Failed to load font'));
+      } finally {
+        setLoadingFonts((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(family);
+          return newSet;
+        });
+      }
+    },
+    [loadingFonts],
+  );
+
+  const isFontLoading = useCallback(
+    (family: string) => {
+      return loadingFonts.has(family);
+    },
+    [loadingFonts],
+  );
+
+  const getFontError = useCallback(
+    (family: string) => {
+      return fontErrors.get(family);
+    },
+    [fontErrors],
+  );
 
   const clearFontError = useCallback((family: string) => {
-    setFontErrors(prev => {
+    setFontErrors((prev) => {
       const newMap = new Map(prev);
       newMap.delete(family);
       return newMap;

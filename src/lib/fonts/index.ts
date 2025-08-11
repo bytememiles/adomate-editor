@@ -2,12 +2,12 @@
 export { GOOGLE_FONTS_CONFIG } from './config';
 
 // Export service functions
-export { 
-  fetchGoogleFonts, 
-  ensureFontLoaded, 
+export {
+  fetchGoogleFonts,
+  ensureFontLoaded,
   ensureFontsLoaded,
   type GoogleFont,
-  type FontLoadStatus 
+  type FontLoadStatus,
 } from './service';
 
 // Export React hooks
