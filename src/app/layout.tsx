@@ -1,6 +1,5 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
-import { Suspense } from 'react';
 
 import '@/styles/index.css';
 import Providers from './providers';
@@ -58,12 +57,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
-      <head>
-        <meta name='application-name' content='Adomate Editor' />
-      </head>
       <body className='min-h-screen bg-neutral-50 text-neutral-900 antialiased'>
         <Providers>
-          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+          {children}
         </Providers>
       </body>
     </html>

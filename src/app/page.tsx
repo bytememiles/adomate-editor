@@ -1,8 +1,6 @@
 import React from 'react';
 import FileUploader from '@/components/FileUploader';
 
-const Home = (): React.JSX.Element => {
+export default function HomePage(): React.JSX.Element {
   return <FileUploader />;
-};
-
-export default Home;
+}
