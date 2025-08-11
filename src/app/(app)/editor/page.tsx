@@ -10,9 +10,13 @@ export default function EditorPage() {
   const dispatch = useAppDispatch();
   const background = useAppSelector(selectBackground);
 
+  console.log('Editor page loaded, background:', background);
+
   // Redirect to home if no background
   useEffect(() => {
+    console.log('Editor useEffect - background:', background);
     if (background === null) {
+      console.log('No background found, redirecting to home');
       router.replace('/');
     }
   }, [background, router]);

@@ -8,45 +8,61 @@ import { nanoid } from 'nanoid';
 import { checkLocalStorageSpace, wouldExceedStorageLimit } from '@/utils';
 import { type UploadedFile } from '@/types';
 import { STORAGE_KEYS, STORAGE_LIMITS } from '@/constants';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useAppDispatch } from '@/store';
+import { setBackground } from '@/store';
 
 export default function HomePage(): React.JSX.Element {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const fileUploaderRef = useRef<FileUploaderRef>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useLocalStorage<UploadedFile[]>(
+    STORAGE_KEYS.UPLOADED_FILES,
+    [],
+  );
   const [storageWarning, setStorageWarning] = useState<string | null>(null);
-
-  // Load uploaded files from localStorage on component mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEYS.UPLOADED_FILES);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Convert stored dates back to Date objects
-        const filesWithDates = parsed.map((file: any) => ({
-          ...file,
-          uploadedAt: new Date(file.uploadedAt),
-        }));
-        setUploadedFiles(filesWithDates);
-      }
-    } catch (error) {
-      console.error('Failed to load uploaded files from localStorage:', error);
-    }
-  }, []);
-
-  // Save uploaded files to localStorage whenever they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.UPLOADED_FILES, JSON.stringify(uploadedFiles));
-    } catch (error) {
-      console.error('Failed to save uploaded files to localStorage:', error);
-    }
-  }, [uploadedFiles]);
 
   // Check storage space whenever files change
   useEffect(() => {
     const storageInfo = checkLocalStorageSpace(uploadedFiles, STORAGE_LIMITS.MAX_STORAGE_SIZE);
     setStorageWarning(storageInfo.warningMessage);
   }, [uploadedFiles]);
+
+  // Listen for navigation events to refresh localStorage data
+  useEffect(() => {
+    const handleFocus = () => {
+      // When the page gains focus (e.g., user navigates back), refresh localStorage data
+      try {
+        const stored = localStorage.getItem(STORAGE_KEYS.UPLOADED_FILES);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          // Convert stored dates back to Date objects
+          const filesWithDates = parsed.map((file: any) => ({
+            ...file,
+            uploadedAt: new Date(file.uploadedAt),
+          }));
+          setUploadedFiles(filesWithDates);
+        }
+      } catch (error) {
+        console.error('Failed to refresh localStorage data:', error);
+      }
+    };
+
+    // Listen for page focus events
+    window.addEventListener('focus', handleFocus);
+
+    // Also listen for visibility change events (when user switches tabs back)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        handleFocus();
+      }
+    });
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+    };
+  }, [setUploadedFiles]);
 
   // Convert file to base64 string
   const fileToBase64 = (file: File): Promise<string> => {
@@ -55,6 +71,18 @@ export default function HomePage(): React.JSX.Element {
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
+    });
+  };
+
+  // Get image dimensions from base64 string
+  const getImageDimensions = (base64String: string): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.onerror = reject;
+      img.src = base64String;
     });
   };
 
@@ -85,6 +113,8 @@ export default function HomePage(): React.JSX.Element {
   const handleFileUploaded = useCallback(
     async (file: File) => {
       try {
+        console.log('File uploaded:', file);
+
         // Check if adding this file would exceed storage limit
         if (wouldExceedStorageLimit(uploadedFiles, file.size, STORAGE_LIMITS.MAX_STORAGE_SIZE)) {
           alert('Storage limit exceeded. Please delete some files before uploading.');
@@ -93,6 +123,11 @@ export default function HomePage(): React.JSX.Element {
 
         // Convert file to base64 for localStorage storage
         const base64String = await fileToBase64(file);
+        console.log('File converted to base64, length:', base64String.length);
+
+        // Get image dimensions
+        const { width, height } = await getImageDimensions(base64String);
+        console.log('Image dimensions:', { width, height });
 
         // Create a new uploaded file entry
         const newFile: UploadedFile = {
@@ -102,6 +137,7 @@ export default function HomePage(): React.JSX.Element {
           size: file.size,
           uploadedAt: new Date(),
         };
+        console.log('Created new file entry:', newFile);
 
         setUploadedFiles((prev) => {
           const updated = [newFile, ...prev];
@@ -110,31 +146,69 @@ export default function HomePage(): React.JSX.Element {
           return cleanedBySize;
         });
 
+        // Set the background in Redux store
+        const backgroundData = {
+          src: base64String,
+          originalWidth: width,
+          originalHeight: height,
+          displayWidth: width,
+          displayHeight: height,
+        };
+        console.log('Setting background in store:', backgroundData);
+
+        dispatch(setBackground(backgroundData));
+        console.log('Background set in store successfully');
+
         // Navigate to editor page with the uploaded image
         router.push('/editor');
       } catch (error) {
         console.error('Failed to convert file to base64:', error);
       }
     },
-    [uploadedFiles, cleanupOldFiles, cleanupStorageSpace, router],
+    [uploadedFiles, cleanupOldFiles, cleanupStorageSpace, router, setUploadedFiles, dispatch],
   );
 
   const handleFileSelect = useCallback(
-    (file: UploadedFile) => {
-      // Navigate to editor page with the selected image
-      router.push('/editor');
-      // Note: You might want to set the selected file in your store here
-      // so the editor knows which image to load
+    async (file: UploadedFile) => {
+      try {
+        console.log('Selected file:', file);
+
+        // Get image dimensions from the stored base64 string
+        const { width, height } = await getImageDimensions(file.src);
+        console.log('Image dimensions:', { width, height });
+
+        // Set the background in Redux store
+        const backgroundData = {
+          src: file.src,
+          originalWidth: width,
+          originalHeight: height,
+          displayWidth: width,
+          displayHeight: height,
+        };
+        console.log('Setting background in store:', backgroundData);
+
+        dispatch(setBackground(backgroundData));
+        console.log('Background set in store successfully');
+
+        // Navigate to editor page with the selected image
+        router.push('/editor');
+      } catch (error) {
+        console.error('Failed to get image dimensions:', error);
+        alert('Failed to load the selected image. Please try again.');
+      }
     },
-    [router],
+    [router, dispatch],
   );
 
-  const handleFileDelete = useCallback((fileId: string) => {
-    setUploadedFiles((prev) => {
-      const updated = prev.filter((file) => file.id !== fileId);
-      return updated;
-    });
-  }, []);
+  const handleFileDelete = useCallback(
+    (fileId: string) => {
+      setUploadedFiles((prev) => {
+        const updated = prev.filter((file) => file.id !== fileId);
+        return updated;
+      });
+    },
+    [setUploadedFiles],
+  );
 
   const handleUploadNew = useCallback(() => {
     // Trigger file selection in the FileUploader component
@@ -145,7 +219,7 @@ export default function HomePage(): React.JSX.Element {
 
   const handleClearAll = useCallback(() => {
     setUploadedFiles([]);
-  }, []);
+  }, [setUploadedFiles]);
 
   return (
     <div className='min-h-screen bg-neutral-50 text-neutral-900 flex'>
