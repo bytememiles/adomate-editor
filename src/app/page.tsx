@@ -1,3 +1,6 @@
+import EditorControls from '@/components/EditorControls';
+import FontSelector from '@/components/FontSelector';
+
 const Home = (): React.JSX.Element => {
   return (
     <div className='min-h-screen bg-neutral-50 text-neutral-900'>
@@ -23,6 +26,12 @@ const Home = (): React.JSX.Element => {
           </header>
 
           <main className='space-y-8'>
+            {/* Editor Controls */}
+            <EditorControls />
+            
+            {/* Font Selector */}
+            <FontSelector />
+            
             {/* Project Status */}
             <section className='bg-white rounded-lg shadow-sm border border-grey-300 p-6'>
               <h2 className='text-2xl font-semibold text-text-primary mb-4'>

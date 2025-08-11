@@ -15,6 +15,9 @@ export {
   restoreSnapshot,
 } from './slices/editorSlice';
 
+// Export thunks
+export { restoreFromStorage, resetEditor } from './thunks';
+
 // Export selectors
 export {
   selectDoc,
@@ -26,6 +29,9 @@ export {
   selectSelectedLayers,
   selectHistoryCount,
 } from './selectors';
+
+// Export hooks
+export { useAppDispatch, useAppSelector } from './hooks';
 
 // Export types
 export type { Background, TextLayer, Doc, HistoryState, Font, EditorAction } from '@/types';
