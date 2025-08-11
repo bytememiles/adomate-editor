@@ -12,7 +12,9 @@
 /* Base button styles */
 .btn:focus {
   outline: none;
-  box-shadow: 0 0 0 2px #00AB55, 0 0 0 4px white;
+  box-shadow:
+    0 0 0 2px #00ab55,
+    0 0 0 4px white;
 }
 
 .btn:disabled {
@@ -22,12 +24,12 @@
 
 /* Primary button */
 .btn.btn-primary {
-  background-color: #00AB55;
+  background-color: #00ab55;
   color: white;
 }
 
 .btn.btn-primary:hover {
-  background-color: #007B55;
+  background-color: #007b55;
 }
 
 .btn.btn-primary:active {
@@ -35,79 +37,89 @@
 }
 
 .btn.btn-primary:focus {
-  box-shadow: 0 0 0 2px #5BE584, 0 0 0 4px white;
+  box-shadow:
+    0 0 0 2px #5be584,
+    0 0 0 4px white;
 }
 
 /* Secondary button */
 .btn.btn-secondary {
-  background-color: #3366FF;
+  background-color: #3366ff;
   color: white;
 }
 
 .btn.btn-secondary:hover {
-  background-color: #1939B7;
+  background-color: #1939b7;
 }
 
 .btn.btn-secondary:active {
-  background-color: #091A7A;
+  background-color: #091a7a;
 }
 
 .btn.btn-secondary:focus {
-  box-shadow: 0 0 0 2px #84A9FF, 0 0 0 4px white;
+  box-shadow:
+    0 0 0 2px #84a9ff,
+    0 0 0 4px white;
 }
 
 /* Success button */
 .btn.btn-success {
-  background-color: #36B37E;
+  background-color: #36b37e;
   color: white;
 }
 
 .btn.btn-success:hover {
-  background-color: #1B806A;
+  background-color: #1b806a;
 }
 
 .btn.btn-success:active {
-  background-color: #0A5554;
+  background-color: #0a5554;
 }
 
 .btn.btn-success:focus {
-  box-shadow: 0 0 0 2px #86E8AB, 0 0 0 4px white;
+  box-shadow:
+    0 0 0 2px #86e8ab,
+    0 0 0 4px white;
 }
 
 /* Warning button */
 .btn.btn-warning {
-  background-color: #FFAB00;
-  color: #212B36;
+  background-color: #ffab00;
+  color: #212b36;
 }
 
 .btn.btn-warning:hover {
-  background-color: #B76E00;
+  background-color: #b76e00;
 }
 
 .btn.btn-warning:active {
-  background-color: #7A4100;
+  background-color: #7a4100;
 }
 
 .btn.btn-warning:focus {
-  box-shadow: 0 0 0 2px #FFD666, 0 0 0 4px white;
+  box-shadow:
+    0 0 0 2px #ffd666,
+    0 0 0 4px white;
 }
 
 /* Error button */
 .btn.btn-error {
-  background-color: #FF5630;
+  background-color: #ff5630;
   color: white;
 }
 
 .btn.btn-error:hover {
-  background-color: #B71D18;
+  background-color: #b71d18;
 }
 
 .btn.btn-error:active {
-  background-color: #7A0916;
+  background-color: #7a0916;
 }
 
 .btn.btn-error:focus {
-  box-shadow: 0 0 0 2px #FFAC82, 0 0 0 4px white;
+  box-shadow:
+    0 0 0 2px #ffac82,
+    0 0 0 4px white;
 }
 
 /* Outline variants */
@@ -117,22 +129,22 @@
 }
 
 .btn.btn-outline.btn-primary {
-  border-color: #00AB55;
-  color: #00AB55;
+  border-color: #00ab55;
+  color: #00ab55;
 }
 
 .btn.btn-outline.btn-primary:hover {
-  background-color: #00AB55;
+  background-color: #00ab55;
   color: white;
 }
 
 .btn.btn-outline.btn-secondary {
-  border-color: #3366FF;
-  color: #3366FF;
+  border-color: #3366ff;
+  color: #3366ff;
 }
 
 .btn.btn-outline.btn-secondary:hover {
-  background-color: #3366FF;
+  background-color: #3366ff;
   color: white;
 }
 

@@ -1,6 +1,6 @@
 const Home = (): React.JSX.Element => {
   return (
-    <div className='min-h-screen bg-background text-foreground'>
+    <div className='min-h-screen bg-neutral-50 text-neutral-900'>
       {/* Desktop-only warning */}
       <div className='lg:hidden fixed inset-0 bg-grey-100 flex items-center justify-center p-8 z-50'>
         <div className='text-center max-w-md'>
@@ -68,7 +68,7 @@ const Home = (): React.JSX.Element => {
             {/* Color Palette Demo */}
             <section className='bg-white rounded-lg shadow-sm border border-grey-300 p-6'>
               <h2 className='text-2xl font-semibold text-text-primary mb-4'>Color Palette</h2>
-              
+
               {/* Grey Scale */}
               <div className='mb-8'>
                 <h3 className='text-lg font-medium text-text-primary mb-4'>Grey Scale</h3>
@@ -83,13 +83,13 @@ const Home = (): React.JSX.Element => {
                     { shade: 600, class: 'bg-grey-600' },
                     { shade: 700, class: 'bg-grey-700' },
                     { shade: 800, class: 'bg-grey-800' },
-                    { shade: 900, class: 'bg-grey-900' }
+                    { shade: 900, class: 'bg-grey-900' },
                   ].map(({ shade, class: className }) => (
-                    <div key={shade} className="text-center">
+                    <div key={shade} className='text-center'>
                       <div
                         className={`w-16 h-16 rounded-lg border border-grey-300 mx-auto mb-2 ${className}`}
                       ></div>
-                      <span className="text-xs text-text-secondary">grey-{shade}</span>
+                      <span className='text-xs text-text-secondary'>grey-{shade}</span>
                     </div>
                   ))}
                 </div>
@@ -103,17 +103,21 @@ const Home = (): React.JSX.Element => {
                     { name: 'Primary', class: 'bg-primary-main', text: 'text-white' },
                     { name: 'Secondary', class: 'bg-secondary-main', text: 'text-white' },
                     { name: 'Success', class: 'bg-success-main', text: 'text-white' },
-                    { name: 'Warning', class: 'bg-warning-main', text: 'text-warning-contrastText' },
+                    {
+                      name: 'Warning',
+                      class: 'bg-warning-main',
+                      text: 'text-warning-contrastText',
+                    },
                     { name: 'Error', class: 'bg-error-main', text: 'text-white' },
-                    { name: 'Info', class: 'bg-info-main', text: 'text-white' }
+                    { name: 'Info', class: 'bg-info-main', text: 'text-white' },
                   ].map(({ name, class: className, text }) => (
-                    <div key={name} className="text-center">
+                    <div key={name} className='text-center'>
                       <div
                         className={`w-16 h-16 rounded-lg border border-grey-300 mx-auto mb-2 ${className} flex items-center justify-center`}
                       >
                         <span className={`text-xs font-medium ${text}`}>{name}</span>
                       </div>
-                      <span className="text-xs text-text-secondary">{name}</span>
+                      <span className='text-xs text-text-secondary'>{name}</span>
                     </div>
                   ))}
                 </div>

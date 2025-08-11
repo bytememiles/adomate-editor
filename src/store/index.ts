@@ -1,0 +1,31 @@
+export { store } from './store';
+export type { RootState, AppDispatch } from './store';
+
+// Export actions
+export {
+  setBackground,
+  addTextLayer,
+  updateLayer,
+  reorderLayer,
+  deleteLayer,
+  selectLayers as selectLayersAction,
+  commitSnapshot,
+  undo,
+  redo,
+  restoreSnapshot,
+} from './slices/editorSlice';
+
+// Export selectors
+export {
+  selectDoc,
+  selectCanUndo,
+  selectCanRedo,
+  selectBackground,
+  selectLayers,
+  selectSelectedIds,
+  selectSelectedLayers,
+  selectHistoryCount,
+} from './selectors';
+
+// Export types
+export type { Background, TextLayer, Doc, HistoryState, Font, EditorAction } from '@/types';

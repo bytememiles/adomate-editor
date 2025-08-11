@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
 
 import '@/styles/index.css';
+import Providers from './providers';
 
 // Font configuration
 const geistSans = Geist({
@@ -53,17 +54,17 @@ export default function RootLayout({
 }>): React.JSX.Element {
   return (
     <html
-      lang="en"
+      lang='en'
       className={`${geistSans.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
       <head>
-        <meta name="application-name" content="Adomate Editor" />
+        <meta name='application-name' content='Adomate Editor' />
       </head>
-      <body className="antialiased bg-background text-foreground min-h-screen">
-        <Suspense fallback={<div>Loading...</div>}>
-          {children}
-        </Suspense>
+      <body className='min-h-screen bg-neutral-50 text-neutral-900 antialiased'>
+        <Providers>
+          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+        </Providers>
       </body>
     </html>
   );
