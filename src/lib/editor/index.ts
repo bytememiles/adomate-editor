@@ -22,3 +22,11 @@ export {
   type HistoryAction,
   type HistoryManager,
 } from './history';
+
+// Export display utilities
+export {
+  computeDisplayFit,
+  computeViewportFit,
+  needsScaling,
+  type DisplayFit,
+} from './display';
