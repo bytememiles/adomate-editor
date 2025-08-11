@@ -19,6 +19,9 @@ const eslintConfig = [
       'no-debugger': 'error',
       'prefer-const': 'error',
       'no-var': 'error',
+      // Suppress hydration warnings
+      'react/no-unescaped-entities': 'off',
+      'react-hooks/exhaustive-deps': 'warn',
     },
   },
 ];

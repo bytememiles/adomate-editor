@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronRight, Image as ImageIcon, Plus, Trash2, AlertTriangle } from 'lucide-react';
-import { getTotalStorageUsed, getStorageUsagePercentage, formatStorageSize } from '@/utils';
 import { type UploadedFile } from '@/types';
+import { formatStorageSize, getStorageUsagePercentage, getTotalStorageUsed, truncateFileName } from '@/utils';
+import { AlertTriangle, ChevronRight, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 interface UploadedFilesSidebarProps {
   files: UploadedFile[];
@@ -70,11 +70,17 @@ export default function UploadedFilesSidebar({
       >
         <div className='h-full flex flex-col p-6'>
           {/* Section 1: Uploaded Files List */}
-          <div className='flex-1 mb-4'>
+          <div className='flex-1 mb-4 flex flex-col'>
             <h3 className='text-sm font-medium text-text-primary mb-3'>Uploaded Files</h3>
-            <div className='h-full space-y-2'>
+            <div
+              className='flex-1 flex flex-col space-y-2 overflow-y-auto pr-2 sidebar-scrollbar'
+              style={{
+                maxHeight: 'calc(100vh - 280px)',
+                alignItems: files.length === 0 ? 'center' : 'flex-start',
+              }}
+            >
               {files.length === 0 ? (
-                <div className='flex-1 flex items-center justify-center h-64'>
+                <div className='flex-1 flex items-center justify-center'>
                   <div className='text-center'>
                     <ImageIcon className='w-12 h-12 text-grey-300 mx-auto mb-2' />
                     <p className='text-sm text-grey-500'>No files uploaded yet</p>
@@ -84,7 +90,7 @@ export default function UploadedFilesSidebar({
                 files.map((file) => (
                   <div
                     key={file.id}
-                    className='group relative bg-white border border-neutral-200 rounded-lg p-3 hover:border-blue-300 transition-colors cursor-pointer'
+                    className='w-full group relative bg-white border border-neutral-200 rounded-lg p-3 hover:border-blue-300 transition-colors cursor-pointer'
                     onClick={() => onFileSelect(file)}
                   >
                     <div className='flex items-center gap-3'>
@@ -96,10 +102,16 @@ export default function UploadedFilesSidebar({
                         />
                       </div>
                       <div className='flex-1 min-w-0'>
-                        <p className='text-sm font-medium text-text-primary truncate'>
-                          {file.name}
+                        <p
+                          className='text-sm font-medium text-text-primary truncate'
+                          title={file.name}
+                        >
+                          {truncateFileName(file.name, 20)}
                         </p>
-                        <p className='text-xs text-text-secondary'>
+                        <p
+                          className='text-xs text-text-secondary'
+                          title={formatStorageSize(file.size)}
+                        >
                           {formatStorageSize(file.size)}
                         </p>
                       </div>
