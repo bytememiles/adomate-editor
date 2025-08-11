@@ -24,9 +24,4 @@ export {
 } from './history';
 
 // Export display utilities
-export {
-  computeDisplayFit,
-  computeViewportFit,
-  needsScaling,
-  type DisplayFit,
-} from './display';
+export { computeDisplayFit, computeViewportFit, needsScaling, type DisplayFit } from './display';

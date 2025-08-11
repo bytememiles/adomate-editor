@@ -96,17 +96,21 @@ const editorSlice = createSlice({
   name: 'editor',
   initialState,
   reducers: {
-      setBackground: (state, action: PayloadAction<Background>) => {
-    const newBackground = action.payload;
-    
-    // If replacing background, preserve existing display dimensions if set
-    if (state.present.background && state.present.background.displayWidth && state.present.background.displayHeight) {
-      newBackground.displayWidth = state.present.background.displayWidth;
-      newBackground.displayHeight = state.present.background.displayHeight;
-    }
-    
-    state.present.background = newBackground;
-  },
+    setBackground: (state, action: PayloadAction<Background>) => {
+      const newBackground = action.payload;
+
+      // If replacing background, preserve existing display dimensions if set
+      if (
+        state.present.background &&
+        state.present.background.displayWidth &&
+        state.present.background.displayHeight
+      ) {
+        newBackground.displayWidth = state.present.background.displayWidth;
+        newBackground.displayHeight = state.present.background.displayHeight;
+      }
+
+      state.present.background = newBackground;
+    },
 
     addTextLayer: (state, action: PayloadAction<Partial<Omit<TextLayer, 'id'>> | undefined>) => {
       const newLayer = createTextLayer(action.payload);
