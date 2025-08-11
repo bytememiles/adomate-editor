@@ -1,5 +1,7 @@
 import EditorControls from '@/components/EditorControls';
 import FontSelector from '@/components/FontSelector';
+import ExportControls from '@/components/ExportControls';
+import EditorBehaviorDemo from '@/components/EditorBehaviorDemo';
 
 const Home = (): React.JSX.Element => {
   return (
@@ -28,10 +30,16 @@ const Home = (): React.JSX.Element => {
           <main className='space-y-8'>
             {/* Editor Controls */}
             <EditorControls />
-            
+
             {/* Font Selector */}
             <FontSelector />
-            
+
+            {/* Export Controls */}
+            <ExportControls />
+
+            {/* Editor Behavior Demo */}
+            <EditorBehaviorDemo />
+
             {/* Project Status */}
             <section className='bg-white rounded-lg shadow-sm border border-grey-300 p-6'>
               <h2 className='text-2xl font-semibold text-text-primary mb-4'>
