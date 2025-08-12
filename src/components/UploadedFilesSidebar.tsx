@@ -1,7 +1,12 @@
 'use client';
 
 import { type UploadedFile } from '@/types';
-import { formatStorageSize, getStorageUsagePercentage, getTotalStorageUsed, truncateFileName } from '@/utils';
+import {
+  formatStorageSize,
+  getStorageUsagePercentage,
+  getTotalStorageUsed,
+  truncateFileName,
+} from '@/utils';
 import { AlertTriangle, ChevronRight, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 

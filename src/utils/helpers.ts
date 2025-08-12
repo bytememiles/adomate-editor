@@ -74,7 +74,7 @@ export function truncateFileName(fileName: string, maxLength: number = 20): stri
   }
 
   const lastDot = fileName.lastIndexOf('.');
-  
+
   // No extension or hidden file, just truncate middle
   if (lastDot === -1 || lastDot === 0) {
     const startLen = Math.ceil((maxLength - 3) / 2); // 3 for '...'
@@ -94,13 +94,8 @@ export function truncateFileName(fileName: string, maxLength: number = 20): stri
   // Truncate base name in the middle, preserving extension
   const startLen = Math.ceil(maxBaseLength / 2);
   const endLen = Math.floor(maxBaseLength / 2);
-  
-  return (
-    baseName.slice(0, startLen) +
-    '...' +
-    baseName.slice(-endLen) +
-    extension
-  );
+
+  return baseName.slice(0, startLen) + '...' + baseName.slice(-endLen) + extension;
 }
 
 /**

@@ -170,15 +170,6 @@ const FileUploader = forwardRef<FileUploaderRef, FileUploaderProps>(
                   <X className='w-4 h-4' />
                 </button>
               </div>
-              <div className='mt-4 text-center'>
-                <p className='text-sm text-text-secondary mb-2'>{previewFileName}</p>
-                <button
-                  onClick={handleClick}
-                  className='bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors'
-                >
-                  Upload Another Image
-                </button>
-              </div>
             </div>
           ) : (
             // Upload Mode

@@ -1,14 +1,30 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { selectBackground, selectCanUndo, selectCanRedo, addTextLayer, undo, redo } from '@/store';
+import {
+  selectBackground,
+  selectCanUndo,
+  selectCanRedo,
+  addTextLayer,
+  undo,
+  redo,
+  setBackground,
+} from '@/store';
+import UploadedFilesSidebar from '@/components/UploadedFilesSidebar';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { STORAGE_KEYS, STORAGE_LIMITS } from '@/constants';
+import { type UploadedFile } from '@/types';
 
 export default function EditorPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const background = useAppSelector(selectBackground);
+  const [uploadedFiles, setUploadedFiles] = useLocalStorage<UploadedFile[]>(
+    STORAGE_KEYS.UPLOADED_FILES,
+    [],
+  );
 
   console.log('Editor page loaded, background:', background);
 
@@ -20,6 +36,64 @@ export default function EditorPage() {
       router.replace('/');
     }
   }, [background, router]);
+
+  // Get image dimensions from base64 string
+  const getImageDimensions = (base64String: string): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.onerror = reject;
+      img.src = base64String;
+    });
+  };
+
+  // Handle file selection from sidebar
+  const handleFileSelect = useCallback(
+    async (file: UploadedFile) => {
+      try {
+        // Get image dimensions from the stored base64 string
+        const { width, height } = await getImageDimensions(file.src);
+
+        // Set the background in Redux store
+        dispatch(
+          setBackground({
+            src: file.src,
+            originalWidth: width,
+            originalHeight: height,
+            displayWidth: width,
+            displayHeight: height,
+          }),
+        );
+      } catch (error) {
+        console.error('Failed to get image dimensions:', error);
+        alert('Failed to load the selected image. Please try again.');
+      }
+    },
+    [dispatch],
+  );
+
+  // Handle file deletion
+  const handleFileDelete = useCallback(
+    (fileId: string) => {
+      setUploadedFiles((prev) => {
+        const updated = prev.filter((file) => file.id !== fileId);
+        return updated;
+      });
+    },
+    [setUploadedFiles],
+  );
+
+  // Handle upload new image
+  const handleUploadNew = useCallback(() => {
+    router.push('/');
+  }, [router]);
+
+  // Handle clear all files
+  const handleClearAll = useCallback(() => {
+    setUploadedFiles([]);
+  }, [setUploadedFiles]);
 
   // Show loading while checking state
   if (background === null) {
@@ -34,7 +108,7 @@ export default function EditorPage() {
   }
 
   return (
-    <div className='min-h-screen bg-neutral-50 text-neutral-900 flex flex-col'>
+    <div className='min-h-screen bg-neutral-50 text-neutral-900 flex'>
       {/* Desktop-only warning */}
       <div className='lg:hidden fixed inset-0 bg-grey-100 flex items-center justify-center p-8 z-50'>
         <div className='text-center max-w-md'>
@@ -123,9 +197,6 @@ export default function EditorPage() {
 
         {/* Main Content Area */}
         <div className='flex flex-1'>
-          {/* Left column - flex-1 */}
-          <div className='flex-1'></div>
-
           {/* Canvas Area */}
           <div className='flex-1 flex items-center justify-center p-8'>
             <div
@@ -155,40 +226,6 @@ export default function EditorPage() {
               </div>
             </div>
           </div>
-
-          {/* Right Sidebar - 340px */}
-          <div className='w-[340px] border-l border-neutral-200 bg-white p-6'>
-            <div className='h-full flex flex-col'>
-              {/* Header */}
-              <div className='mb-6'>
-                <h2 className='text-xl font-semibold text-text-primary mb-4'>Batch Editor</h2>
-
-                {/* Background Thumbnail */}
-                <div className='mb-4'>
-                  <div className='w-full h-24 bg-grey-100 rounded-lg overflow-hidden'>
-                    <img
-                      src={background.src}
-                      alt='Background thumbnail'
-                      className='w-full h-full object-cover'
-                    />
-                  </div>
-                  <p className='text-xs text-text-secondary mt-2 text-center'>
-                    {background.originalWidth} × {background.originalHeight}
-                  </p>
-                </div>
-              </div>
-
-              {/* Layers List */}
-              <div className='flex-1'>
-                <h3 className='text-sm font-medium text-text-primary mb-3'>Layers</h3>
-                <div className='space-y-2'>
-                  <div className='text-sm text-text-secondary text-center py-4'>
-                    No layers yet. Click "Add Text" to create one.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Bottom Bar */}
@@ -201,6 +238,18 @@ export default function EditorPage() {
           </div>
         </div>
       </div>
+
+      {/* Right Sidebar - Uploaded Files */}
+      <UploadedFilesSidebar
+        files={uploadedFiles}
+        onFileSelect={handleFileSelect}
+        onFileDelete={handleFileDelete}
+        onUploadNew={handleUploadNew}
+        onClearAll={handleClearAll}
+        maxFiles={STORAGE_LIMITS.MAX_FILES}
+        storageWarning={null}
+        maxStorageSize={STORAGE_LIMITS.MAX_STORAGE_SIZE}
+      />
     </div>
   );
 }
