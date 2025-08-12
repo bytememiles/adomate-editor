@@ -8,6 +8,7 @@ import {
   truncateFileName,
 } from '@/utils';
 import { AlertTriangle, ChevronRight, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui';
 import { useState } from 'react';
 
 interface UploadedFilesSidebarProps {
@@ -141,14 +142,10 @@ export default function UploadedFilesSidebar({
           <div className='border-t border-neutral-200 pt-2 mt-auto'>
             {/* Upload Button */}
             <div className='mb-4'>
-              <button
-                type='button'
-                onClick={onUploadNew}
-                className='w-full bg-grey-200 hover:bg-grey-300 text-grey-700 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 justify-center'
-              >
-                <Plus className='w-4 h-4' />
+              <Button onClick={onUploadNew} className='w-full' rounded>
+                <Plus className='w-4 h-4 mr-2' />
                 Upload Image
-              </button>
+              </Button>
             </div>
 
             {/* Storage Warning */}

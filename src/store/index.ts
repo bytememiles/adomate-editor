@@ -13,6 +13,13 @@ export {
   undo,
   redo,
   restoreSnapshot,
+  resetCanvas,
+  setCanvasZoom,
+  setCanvasPan,
+  setCanvasRotation,
+  resetCanvasView,
+  resetTextLayers,
+  clearAllLayers,
 } from './slices/editorSlice';
 
 // Export thunks
@@ -28,6 +35,10 @@ export {
   selectSelectedIds,
   selectSelectedLayers,
   selectHistoryCount,
+  selectCanvas,
+  selectCanvasZoom,
+  selectCanvasPan,
+  selectCanvasRotation,
 } from './selectors';
 
 // Export hooks

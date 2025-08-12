@@ -128,3 +128,12 @@ export function isImageFile(fileName: string): boolean {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
   return imageExtensions.includes(extension);
 }
+
+/**
+ * Utility function to combine class names with conditional logic
+ * @param classes - Class names to combine
+ * @returns Combined class string
+ */
+export function cn(...classes: (string | undefined | null | false)[]): string {
+  return classes.filter(Boolean).join(' ');
+}

@@ -33,3 +33,15 @@ export const selectHistoryCount = createSelector([selectEditorState], (editorSta
   past: editorState.past.length,
   future: editorState.future.length,
 }));
+
+// Canvas selectors
+export const selectCanvas = createSelector([selectDoc], (doc) => doc.canvas);
+
+export const selectCanvasZoom = createSelector([selectCanvas], (canvas) => canvas.zoom);
+
+export const selectCanvasPan = createSelector([selectCanvas], (canvas) => ({
+  x: canvas.panX,
+  y: canvas.panY,
+}));
+
+export const selectCanvasRotation = createSelector([selectCanvas], (canvas) => canvas.rotation);

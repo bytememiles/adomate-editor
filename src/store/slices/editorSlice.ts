@@ -12,6 +12,22 @@ const DEFAULT_FONT = {
   size: 16,
 };
 
+// Canvas state interface
+interface CanvasState {
+  zoom: number;
+  panX: number;
+  panY: number;
+  rotation: number;
+}
+
+// Initial canvas state
+const initialCanvasState: CanvasState = {
+  zoom: 100,
+  panX: 0,
+  panY: 0,
+  rotation: 0,
+};
+
 // Initial state
 const initialState: HistoryState = {
   past: [],
@@ -19,6 +35,7 @@ const initialState: HistoryState = {
     background: null,
     layers: [],
     selectedIds: [],
+    canvas: initialCanvasState,
   },
   future: [],
 };
@@ -192,6 +209,46 @@ const editorSlice = createSlice({
       state.present = action.payload;
       state.future = [];
     },
+
+    // Canvas actions
+    resetCanvas: (state) => {
+      state.present.canvas = { ...initialCanvasState };
+    },
+
+    setCanvasZoom: (state, action: PayloadAction<number>) => {
+      state.present.canvas.zoom = action.payload;
+    },
+
+    setCanvasPan: (state, action: PayloadAction<{ x: number; y: number }>) => {
+      state.present.canvas.panX = action.payload.x;
+      state.present.canvas.panY = action.payload.y;
+    },
+
+    setCanvasRotation: (state, action: PayloadAction<number>) => {
+      state.present.canvas.rotation = action.payload;
+    },
+
+    resetCanvasView: (state) => {
+      // Reset only view-related properties, keep zoom
+      state.present.canvas.panX = 0;
+      state.present.canvas.panY = 0;
+      state.present.canvas.rotation = 0;
+    },
+
+    // Text layer operations
+    resetTextLayers: (state) => {
+      // Reset all text layers to their original positions and properties
+      // This could be used to restore text layers to their initial state
+      // For now, we'll clear all layers - you can modify this based on your needs
+      state.present.layers = [];
+      state.present.selectedIds = [];
+    },
+
+    clearAllLayers: (state) => {
+      // Clear all text layers
+      state.present.layers = [];
+      state.present.selectedIds = [];
+    },
   },
 });
 
@@ -206,6 +263,13 @@ export const {
   undo,
   redo,
   restoreSnapshot,
+  resetCanvas,
+  setCanvasZoom,
+  setCanvasPan,
+  setCanvasRotation,
+  resetCanvasView,
+  resetTextLayers,
+  clearAllLayers,
 } = editorSlice.actions;
 
 export default editorSlice.reducer;
