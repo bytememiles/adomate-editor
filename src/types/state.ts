@@ -1,4 +1,6 @@
 // Redux state interfaces
+import type { PresetState } from '@/store/slices/presetSlice';
+import type { SelectedLayerState } from '@/store/slices/selectedLayerSlice';
 import type { Doc } from './data';
 
 export interface HistoryState {
@@ -9,5 +11,6 @@ export interface HistoryState {
 
 export interface RootState {
   editor: HistoryState;
-  // Add other slices here as needed
+  selectedLayer: SelectedLayerState;
+  preset: PresetState;
 }

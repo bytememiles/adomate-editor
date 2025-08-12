@@ -22,6 +22,27 @@ export {
   clearAllLayers,
 } from './slices/editorSlice';
 
+// Export selected layer actions
+export {
+  setSelectedLayer,
+  clearSelectedLayer,
+  updateSelectedLayerProperties,
+  updateSelectedLayerPosition,
+  updateSelectedLayerTransform,
+  setEditMode,
+  initializeLayerProperties,
+} from './slices/selectedLayerSlice';
+
+// Export preset actions
+export {
+  updateTextPreset,
+  updateTextFontPreset,
+  updateImagePreset,
+  resetTextPreset,
+  resetImagePreset,
+  resetAllPresets,
+} from './slices/presetSlice';
+
 // Export thunks
 export { restoreFromStorage, resetEditor } from './thunks';
 
@@ -39,6 +60,19 @@ export {
   selectCanvasZoom,
   selectCanvasPan,
   selectCanvasRotation,
+  selectSelectedLayer,
+  selectSelectedLayerId,
+  selectSelectedLayerType,
+  selectSelectedLayerProperties,
+  selectSelectedLayerPosition,
+  selectSelectedLayerTransform,
+  selectIsEditing,
+  selectSelectedTextLayer,
+  selectSelectedTextFont,
+  selectPreset,
+  selectTextPreset,
+  selectImagePreset,
+  selectTextFontPreset,
 } from './selectors';
 
 // Export hooks

@@ -1,6 +1,7 @@
 import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit';
 import editorReducer from './slices/editorSlice';
-import type { RootState as StoreRootState } from '@/types';
+import selectedLayerReducer from './slices/selectedLayerSlice';
+import presetReducer from './slices/presetSlice';
 
 // Create listener middleware for autosave
 const listenerMiddleware = createListenerMiddleware();
@@ -39,6 +40,8 @@ listenerMiddleware.startListening({
 
 const rootReducer = {
   editor: editorReducer,
+  selectedLayer: selectedLayerReducer,
+  preset: presetReducer,
 };
 
 export const store = configureStore({

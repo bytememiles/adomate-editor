@@ -68,20 +68,6 @@ export default function EditorToolbar({ selectedId }: EditorToolbarProps) {
     [selectedTextLayer, handleTextUpdate],
   );
 
-  // Handle font family change
-  const handleFontFamilyChange = useCallback(
-    (family: string) => {
-      if (selectedTextLayer) {
-        handleTextUpdate(selectedTextLayer.id, {
-          font: { ...selectedTextLayer.font, family },
-        });
-      }
-      // Update preset for future text layers
-      setPresetFont((prev) => ({ ...prev, family }));
-    },
-    [selectedTextLayer, handleTextUpdate],
-  );
-
   // Handle font size change
   const handleFontSizeChange = useCallback(
     (size: number) => {
@@ -131,11 +117,7 @@ export default function EditorToolbar({ selectedId }: EditorToolbarProps) {
         {/* Left Section: Text Editing Controls */}
         <div className='flex items-center gap-4'>
           {/* Font Family */}
-          <FontFamilySelector
-            selectedId={selectedId}
-            currentFamily={selectedTextLayer?.font?.family || presetFont.family}
-            onFamilyChange={handleFontFamilyChange}
-          />
+          <FontFamilySelector selectedId={selectedId} />
 
           {/* Font Size */}
           <FontSizeSelector

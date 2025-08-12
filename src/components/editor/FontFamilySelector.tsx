@@ -1,6 +1,13 @@
 'use client';
 
-import { commitSnapshot, selectDoc, useAppDispatch, useAppSelector } from '@/store';
+import {
+  selectSelectedTextLayer,
+  selectTextFontPreset,
+  updateSelectedLayerProperties,
+  updateTextFontPreset,
+  useAppDispatch,
+  useAppSelector,
+} from '@/store';
 import { cn } from '@/utils';
 import {
   addRecentFont,
@@ -15,9 +22,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface FontFamilySelectorProps {
   selectedId: string | null;
-  onTextUpdate?: (id: string, updates: any) => void;
-  currentFamily?: string;
-  onFamilyChange?: (family: string) => void;
 }
 
 interface FontFamilySelectorState {
@@ -36,20 +40,15 @@ const FONT_SELECTOR_WIDTH = 360;
 const FONT_SELECTOR_MAX_HEIGHT = 420;
 const ITEM_HEIGHT = 40;
 
-export default function FontFamilySelector({
-  selectedId,
-  onTextUpdate,
-  currentFamily,
-  onFamilyChange,
-}: FontFamilySelectorProps) {
+export default function FontFamilySelector({ selectedId }: FontFamilySelectorProps) {
   const dispatch = useAppDispatch();
-  const doc = useAppSelector(selectDoc);
-  const selectedTextLayer = selectedId ? doc.layers.find((l) => l.id === selectedId) : null;
+  const selectedTextLayer = useAppSelector(selectSelectedTextLayer);
+  const textFontPreset = useAppSelector(selectTextFontPreset);
 
   const [state, setState] = useState<FontFamilySelectorState>({
     isOpen: false,
     searchQuery: '',
-    selectedFamily: currentFamily || selectedTextLayer?.font?.family || 'Arial',
+    selectedFamily: selectedTextLayer?.font?.family || textFontPreset.family || 'Arial',
     fonts: [],
     recentFonts: [],
     loadingFonts: new Set(),
@@ -75,13 +74,13 @@ export default function FontFamilySelector({
     }
   }, [selectedTextLayer?.font?.family]);
 
-  // Update selectedFamily when currentFamily prop changes
+  // Update selectedFamily when selectedTextLayer or preset changes
   useEffect(() => {
-    console.log('FontFamilySelector: currentFamily prop changed to:', currentFamily);
-    if (currentFamily) {
-      setState((prev) => ({ ...prev, selectedFamily: currentFamily }));
+    const newFamily = selectedTextLayer?.font?.family || textFontPreset.family;
+    if (newFamily) {
+      setState((prev) => ({ ...prev, selectedFamily: newFamily }));
     }
-  }, [currentFamily]);
+  }, [selectedTextLayer?.font?.family, textFontPreset.family]);
 
   // Load Google Fonts catalog
   useEffect(() => {
@@ -155,52 +154,51 @@ export default function FontFamilySelector({
   const handleFontSelect = useCallback(
     async (family: string) => {
       console.log('FontFamilySelector: handleFontSelect called with family:', family);
+
+      // Find the font object to check weight support
+      const font = state.fonts.find((f) => f.family === family);
+      const currentWeight = selectedTextLayer?.font?.weight || textFontPreset.weight;
+
+      // Find nearest available weight
+      const targetWeight = font ? findNearestWeight(font, currentWeight) : currentWeight;
+
       // If there's a selected text layer, update it
       if (selectedTextLayer) {
-        // Find the font object to check weight support
-        const font = state.fonts.find((f) => f.family === family);
-        const currentWeight = selectedTextLayer.font.weight;
+        dispatch(
+          updateSelectedLayerProperties({
+            font: {
+              ...selectedTextLayer.font,
+              family,
+              weight: targetWeight,
+            },
+          }),
+        );
+      }
 
-        // Find nearest available weight
-        const targetWeight = font ? findNearestWeight(font, currentWeight) : currentWeight;
+      // Always update the preset for future text layers
+      dispatch(
+        updateTextFontPreset({
+          family,
+          weight: targetWeight,
+        }),
+      );
 
-        // Update the text layer
-        const updates = {
-          font: {
-            ...selectedTextLayer.font,
-            family,
-            weight: targetWeight,
-          },
-        };
-
-        // Optimistically update UI
-        if (onTextUpdate) {
-          onTextUpdate(selectedTextLayer.id, updates);
-        }
-
-        // Commit to history
-        dispatch(commitSnapshot());
-
-        // Load font and close popup
-        try {
-          await ensureFontLoadedWithFallback(family, targetWeight);
-        } catch (error) {
-          console.error('Font loading failed:', error);
-          // Fallback to safe stack
-          if (onTextUpdate) {
-            onTextUpdate(selectedTextLayer.id, {
+      // Load font and close popup
+      try {
+        await ensureFontLoadedWithFallback(family, targetWeight);
+      } catch (error) {
+        console.error('Font loading failed:', error);
+        // Fallback to safe stack
+        if (selectedTextLayer) {
+          dispatch(
+            updateSelectedLayerProperties({
               font: {
                 ...selectedTextLayer.font,
                 family: 'Inter, system-ui, sans-serif',
               },
-            });
-          }
+            }),
+          );
         }
-      }
-
-      // Always call the onFamilyChange callback if provided (for presets)
-      if (onFamilyChange) {
-        onFamilyChange(family);
       }
 
       // Add to recent fonts
@@ -214,7 +212,7 @@ export default function FontFamilySelector({
         recentFonts: newRecentFonts,
       }));
     },
-    [selectedTextLayer, onTextUpdate, dispatch, onFamilyChange],
+    [selectedTextLayer, textFontPreset.weight, state.fonts, dispatch],
   );
 
   // Handle search input

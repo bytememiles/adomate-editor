@@ -1,5 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 import type { RootState } from './store';
+import type { TextLayerProperties } from './slices/selectedLayerSlice';
 
 // Base selectors
 const selectEditorState = (state: RootState) => state.editor;
@@ -45,3 +46,32 @@ export const selectCanvasPan = createSelector([selectCanvas], (canvas) => ({
 }));
 
 export const selectCanvasRotation = createSelector([selectCanvas], (canvas) => canvas.rotation);
+
+// Selected Layer Selectors
+export const selectSelectedLayer = (state: RootState) => state.selectedLayer;
+export const selectSelectedLayerId = (state: RootState) => state.selectedLayer.id;
+export const selectSelectedLayerType = (state: RootState) => state.selectedLayer.type;
+export const selectSelectedLayerProperties = (state: RootState) => state.selectedLayer.properties;
+export const selectSelectedLayerPosition = (state: RootState) => state.selectedLayer.position;
+export const selectSelectedLayerTransform = (state: RootState) => state.selectedLayer.transform;
+export const selectIsEditing = (state: RootState) => state.selectedLayer.isEditing;
+
+// Text-specific selectors
+export const selectSelectedTextLayer = (state: RootState) => {
+  const selected = state.selectedLayer;
+  if (selected.type === 'text' && selected.properties) {
+    return selected.properties as TextLayerProperties;
+  }
+  return null;
+};
+
+export const selectSelectedTextFont = (state: RootState) => {
+  const textLayer = selectSelectedTextLayer(state);
+  return textLayer?.font || null;
+};
+
+// Preset Selectors
+export const selectPreset = (state: RootState) => state.preset;
+export const selectTextPreset = (state: RootState) => state.preset.text;
+export const selectImagePreset = (state: RootState) => state.preset.image;
+export const selectTextFontPreset = (state: RootState) => state.preset.text.font;
