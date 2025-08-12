@@ -1,10 +1,18 @@
 'use client';
 
-import { useAppDispatch, useAppSelector } from '@/store';
-import { selectCanvas, selectCanUndo, selectCanRedo, undo, redo, setCanvasZoom } from '@/store';
 import { ToolbarButton } from '@/components/ui';
-import { Copy, Undo2, Redo2, ZoomIn, ZoomOut, Trash2 } from 'lucide-react';
+import {
+  redo,
+  selectCanRedo,
+  selectCanUndo,
+  selectCanvas,
+  setCanvasZoom,
+  undo,
+  useAppDispatch,
+  useAppSelector,
+} from '@/store';
 import { type Background } from '@/types';
+import { Copy, Redo2, Trash2, Undo2, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface CanvasWorkspaceProps {
   background: Background;

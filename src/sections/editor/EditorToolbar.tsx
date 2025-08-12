@@ -1,29 +1,30 @@
 'use client';
 
-import { useAppDispatch, useAppSelector } from '@/store';
-import { selectDoc, addTextLayer, updateLayer } from '@/store';
 import { Button, ToolbarButton } from '@/components/ui';
-import { useRouter } from 'next/navigation';
+import { addTextLayer, selectDoc, updateLayer, useAppDispatch, useAppSelector } from '@/store';
 import {
-  Type,
-  Upload,
-  Download,
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  AlignLeft,
   AlignCenter,
+  AlignLeft,
   AlignRight,
+  Bold,
   Copy,
-  RotateCcw,
-  Square,
+  Download,
+  Italic,
   Layers,
   Lock,
-  Unlock,
+  RotateCcw,
+  Square,
+  Strikethrough,
   Trash2,
+  Type,
+  Underline,
+  Unlock,
+  Upload,
 } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useState } from 'react';
+import FontFamilySelector from '@/components/editor/FontFamilySelector';
+import FontSizeSelector from '@/components/editor/FontSizeSelector';
 
 interface EditorToolbarProps {
   selectedId: string | null;
@@ -57,24 +58,13 @@ export default function EditorToolbar({ selectedId, onTextUpdate }: EditorToolba
         {/* Left Section: Text Editing Controls */}
         <div className='flex items-center gap-4'>
           {/* Font Family */}
-          <select
-            className='px-3 py-1 border border-neutral-200 rounded text-sm'
-            value={selectedTextLayer?.font?.family || 'Arial'}
-            disabled={!selectedTextLayer}
-          >
-            <option value='Arial'>Arial</option>
-            <option value='Helvetica'>Helvetica</option>
-            <option value='Times New Roman'>Times New Roman</option>
-          </select>
+          <FontFamilySelector selectedId={selectedId} onTextUpdate={onTextUpdate} />
 
           {/* Font Size */}
-          <input
-            type='number'
-            className='w-16 px-2 py-1 border border-neutral-200 rounded text-sm text-center'
-            value={selectedTextLayer?.font?.size || 16}
-            disabled={!selectedTextLayer}
-            min='8'
-            max='200'
+          <FontSizeSelector
+            selectedId={selectedId}
+            currentSize={selectedTextLayer?.font?.size || 16}
+            onTextUpdate={onTextUpdate}
           />
 
           {/* Color Picker */}

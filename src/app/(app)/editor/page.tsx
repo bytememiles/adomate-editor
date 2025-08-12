@@ -5,13 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store';
 import { selectBackground } from '@/store';
 import UploadedFilesSidebar from '@/components/UploadedFilesSidebar';
-import {
-  EditorToolbar,
-  CanvasControls,
-  CanvasWorkspace,
-  DesktopWarning,
-  LoadingSpinner,
-} from '@/components/editor';
+import { CanvasControls, CanvasWorkspace, DesktopWarning, EditorToolbar } from '@/sections/editor';
+import { FontFamilySelector, FontSizeSelector, LoadingSpinner } from '@/components/editor';
 import { useEditor } from '@/hooks/useEditor';
 
 export default function EditorPage() {

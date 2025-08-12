@@ -1,18 +1,19 @@
 'use client';
 
-import { useAppDispatch, useAppSelector } from '@/store';
+import { ToolbarButton } from '@/components/ui';
 import {
-  selectCanUndo,
-  selectCanRedo,
-  selectCanvas,
-  undo,
   redo,
   resetTextLayers,
+  selectCanRedo,
+  selectCanUndo,
+  selectCanvas,
   setCanvasZoom,
+  undo,
+  useAppDispatch,
+  useAppSelector,
 } from '@/store';
-import { ToolbarButton } from '@/components/ui';
-import { Undo2, Redo2, RotateCcw, ZoomIn, ZoomOut, FlipHorizontal } from 'lucide-react';
 import { type Background } from '@/types';
+import { FlipHorizontal, Redo2, RotateCcw, Undo2, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface CanvasControlsProps {
   background: Background;
