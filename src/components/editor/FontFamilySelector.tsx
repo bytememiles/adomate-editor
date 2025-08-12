@@ -1,6 +1,6 @@
 'use client';
 
-import { commitSnapshot, selectDoc, updateLayer, useAppDispatch, useAppSelector } from '@/store';
+import { commitSnapshot, selectDoc, useAppDispatch, useAppSelector } from '@/store';
 import { cn } from '@/utils';
 import {
   addRecentFont,
@@ -15,7 +15,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface FontFamilySelectorProps {
   selectedId: string | null;
-  onTextUpdate: (id: string, updates: any) => void;
+  onTextUpdate?: (id: string, updates: any) => void;
+  currentFamily?: string;
+  onFamilyChange?: (family: string) => void;
 }
 
 interface FontFamilySelectorState {
@@ -34,7 +36,12 @@ const FONT_SELECTOR_WIDTH = 360;
 const FONT_SELECTOR_MAX_HEIGHT = 420;
 const ITEM_HEIGHT = 40;
 
-export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFamilySelectorProps) {
+export default function FontFamilySelector({
+  selectedId,
+  onTextUpdate,
+  currentFamily,
+  onFamilyChange,
+}: FontFamilySelectorProps) {
   const dispatch = useAppDispatch();
   const doc = useAppSelector(selectDoc);
   const selectedTextLayer = selectedId ? doc.layers.find((l) => l.id === selectedId) : null;
@@ -42,7 +49,7 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
   const [state, setState] = useState<FontFamilySelectorState>({
     isOpen: false,
     searchQuery: '',
-    selectedFamily: selectedTextLayer?.font?.family || 'Arial',
+    selectedFamily: currentFamily || selectedTextLayer?.font?.family || 'Arial',
     fonts: [],
     recentFonts: [],
     loadingFonts: new Set(),
@@ -52,12 +59,29 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Load recent fonts from localStorage
   useEffect(() => {
     const recent = getRecentFonts();
     setState((prev) => ({ ...prev, recentFonts: recent }));
   }, []);
+
+  // Update selectedFamily when selectedTextLayer changes
+  useEffect(() => {
+    if (selectedTextLayer?.font?.family) {
+      setState((prev) => ({ ...prev, selectedFamily: selectedTextLayer.font.family }));
+    }
+  }, [selectedTextLayer?.font?.family]);
+
+  // Update selectedFamily when currentFamily prop changes
+  useEffect(() => {
+    console.log('FontFamilySelector: currentFamily prop changed to:', currentFamily);
+    if (currentFamily) {
+      setState((prev) => ({ ...prev, selectedFamily: currentFamily }));
+    }
+  }, [currentFamily]);
 
   // Load Google Fonts catalog
   useEffect(() => {
@@ -67,6 +91,8 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
         setState((prev) => ({ ...prev, fonts }));
       } catch (error) {
         console.error('Failed to load fonts:', error);
+        // Set empty array on error to prevent undefined state
+        setState((prev) => ({ ...prev, fonts: [] }));
       }
     };
 
@@ -78,7 +104,7 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
   // Ensure font is loaded
   const ensureFontLoadedWithFallback = useCallback(
     async (family: string, weight = 400): Promise<void> => {
-      if (state.loadingFonts.has(family)) return;
+      if (stateRef.current.loadingFonts.has(family)) return;
 
       setState((prev) => ({
         ...prev,
@@ -100,19 +126,27 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
         }));
       }
     },
-    [state.loadingFonts],
+    [],
   );
 
   // Filter fonts based on search
   const filteredFonts = useMemo(() => {
-    if (!state.searchQuery) return state.fonts;
+    // Ensure state.fonts is always an array
+    const fonts = Array.isArray(state.fonts) ? state.fonts : [];
+
+    if (!state.searchQuery) return fonts;
 
     const query = state.searchQuery.toLowerCase();
-    return state.fonts.filter((font) => font.family.toLowerCase().includes(query));
+    return fonts.filter((font) => font.family.toLowerCase().includes(query));
   }, [state.fonts, state.searchQuery]);
 
   // Get visible fonts for virtualization
   const visibleFonts = useMemo(() => {
+    // Ensure filteredFonts is an array and has items
+    if (!Array.isArray(filteredFonts) || filteredFonts.length === 0) {
+      return [];
+    }
+
     const startIndex = Math.floor(state.highlightedIndex / 10) * 10;
     return filteredFonts.slice(startIndex, startIndex + 20);
   }, [filteredFonts, state.highlightedIndex]);
@@ -120,47 +154,58 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
   // Handle font selection
   const handleFontSelect = useCallback(
     async (family: string) => {
-      if (!selectedTextLayer) return;
+      console.log('FontFamilySelector: handleFontSelect called with family:', family);
+      // If there's a selected text layer, update it
+      if (selectedTextLayer) {
+        // Find the font object to check weight support
+        const font = state.fonts.find((f) => f.family === family);
+        const currentWeight = selectedTextLayer.font.weight;
 
-      // Find the font object to check weight support
-      const font = state.fonts.find((f) => f.family === family);
-      const currentWeight = selectedTextLayer.font.weight;
+        // Find nearest available weight
+        const targetWeight = font ? findNearestWeight(font, currentWeight) : currentWeight;
 
-      // Find nearest available weight
-      const targetWeight = font ? findNearestWeight(font, currentWeight) : currentWeight;
+        // Update the text layer
+        const updates = {
+          font: {
+            ...selectedTextLayer.font,
+            family,
+            weight: targetWeight,
+          },
+        };
 
-      // Update the text layer
-      const updates = {
-        font: {
-          ...selectedTextLayer.font,
-          family,
-          weight: targetWeight,
-        },
-      };
+        // Optimistically update UI
+        if (onTextUpdate) {
+          onTextUpdate(selectedTextLayer.id, updates);
+        }
 
-      // Optimistically update UI
-      onTextUpdate(selectedTextLayer.id, updates);
+        // Commit to history
+        dispatch(commitSnapshot());
+
+        // Load font and close popup
+        try {
+          await ensureFontLoadedWithFallback(family, targetWeight);
+        } catch (error) {
+          console.error('Font loading failed:', error);
+          // Fallback to safe stack
+          if (onTextUpdate) {
+            onTextUpdate(selectedTextLayer.id, {
+              font: {
+                ...selectedTextLayer.font,
+                family: 'Inter, system-ui, sans-serif',
+              },
+            });
+          }
+        }
+      }
+
+      // Always call the onFamilyChange callback if provided (for presets)
+      if (onFamilyChange) {
+        onFamilyChange(family);
+      }
 
       // Add to recent fonts
       addRecentFont(family, MAX_RECENT_FONTS);
       const newRecentFonts = getRecentFonts();
-
-      // Commit to history
-      dispatch(commitSnapshot());
-
-      // Load font and close popup
-      try {
-        await ensureFontLoadedWithFallback(family, targetWeight);
-      } catch (error) {
-        console.error('Font loading failed:', error);
-        // Fallback to safe stack
-        onTextUpdate(selectedTextLayer.id, {
-          font: {
-            ...selectedTextLayer.font,
-            family: 'Inter, system-ui, sans-serif',
-          },
-        });
-      }
 
       setState((prev) => ({
         ...prev,
@@ -169,7 +214,7 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
         recentFonts: newRecentFonts,
       }));
     },
-    [selectedTextLayer, onTextUpdate, dispatch, state.fonts, ensureFontLoadedWithFallback],
+    [selectedTextLayer, onTextUpdate, dispatch, onFamilyChange],
   );
 
   // Handle search input
@@ -191,7 +236,10 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
           e.preventDefault();
           setState((prev) => ({
             ...prev,
-            highlightedIndex: Math.min(prev.highlightedIndex + 1, filteredFonts.length - 1),
+            highlightedIndex: Math.min(
+              prev.highlightedIndex + 1,
+              Math.max(0, (filteredFonts?.length || 1) - 1),
+            ),
           }));
           break;
         case 'ArrowUp':
@@ -204,6 +252,7 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
         case 'Enter':
           e.preventDefault();
           if (
+            Array.isArray(filteredFonts) &&
             filteredFonts.length > 0 &&
             state.highlightedIndex >= 0 &&
             state.highlightedIndex < filteredFonts.length
@@ -224,7 +273,10 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
           break;
         case 'End':
           e.preventDefault();
-          setState((prev) => ({ ...prev, highlightedIndex: filteredFonts.length - 1 }));
+          setState((prev) => ({
+            ...prev,
+            highlightedIndex: Math.max(0, (filteredFonts?.length || 1) - 1),
+          }));
           break;
       }
     },
@@ -233,12 +285,17 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
 
   // Load font preview when row becomes visible
   useEffect(() => {
+    // Only load fonts that aren't already loading and aren't already loaded
     visibleFonts.forEach((font) => {
       if (!state.loadingFonts.has(font.family)) {
-        ensureFontLoadedWithFallback(font.family, 400);
+        // Check if font is already loaded before attempting to load
+        const isLoaded = document.fonts.check(`16px "${font.family}"`);
+        if (!isLoaded) {
+          ensureFontLoadedWithFallback(font.family, 400);
+        }
       }
     });
-  }, [visibleFonts, state.loadingFonts, ensureFontLoadedWithFallback]);
+  }, [visibleFonts, ensureFontLoadedWithFallback]);
 
   // Close popup when clicking outside
   useEffect(() => {
@@ -261,7 +318,8 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
     }
   }, [state.isOpen]);
 
-  const currentFamily = selectedTextLayer?.font?.family || 'Arial';
+  // Use internal state for selected family, fallback to text layer font, then to Arial
+  const selectedFontFamily = state.selectedFamily || selectedTextLayer?.font?.family || 'Arial';
   const hasRecentFonts = state.recentFonts.length > 0;
 
   return (
@@ -272,14 +330,12 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
         className={cn(
           'px-3 py-1 border border-neutral-200 rounded text-sm flex items-center gap-2 min-w-[120px]',
           'hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
-          !selectedTextLayer && 'opacity-50 cursor-not-allowed',
         )}
-        onClick={() => selectedTextLayer && setState((prev) => ({ ...prev, isOpen: !prev.isOpen }))}
-        disabled={!selectedTextLayer}
+        onClick={() => setState((prev) => ({ ...prev, isOpen: !prev.isOpen }))}
         aria-label='Font family'
       >
-        <span className='truncate' style={{ fontFamily: currentFamily }}>
-          {currentFamily}
+        <span className='truncate' style={{ fontFamily: selectedFontFamily }}>
+          {selectedFontFamily}
         </span>
         <ChevronDown className='w-4 h-4 flex-shrink-0' />
       </button>
@@ -338,17 +394,17 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
                     className={cn(
                       'px-3 py-2 cursor-pointer hover:bg-blue-50 flex items-center justify-between',
                       state.highlightedIndex === index && 'bg-blue-100',
-                      family === currentFamily && 'bg-blue-50',
+                      family === selectedFontFamily && 'bg-blue-50',
                     )}
                     onClick={() => handleFontSelect(family)}
                     onMouseEnter={() => setState((prev) => ({ ...prev, highlightedIndex: index }))}
                     role='option'
-                    aria-selected={family === currentFamily}
+                    aria-selected={family === selectedFontFamily}
                   >
                     <span className='text-sm truncate' style={{ fontFamily: family }}>
                       {family}
                     </span>
-                    {family === currentFamily && (
+                    {family === selectedFontFamily && (
                       <Check className='w-4 h-4 text-blue-600 flex-shrink-0' />
                     )}
                   </div>
@@ -361,49 +417,50 @@ export default function FontFamilySelector({ selectedId, onTextUpdate }: FontFam
             <div className='px-3 py-2 bg-neutral-50 text-xs font-medium text-neutral-600 uppercase tracking-wide'>
               English fonts
             </div>
-            {visibleFonts.map((font, index) => {
-              const globalIndex = hasRecentFonts ? state.recentFonts.length + index : index;
-              const isHighlighted = globalIndex === state.highlightedIndex;
-              const isLoading = state.loadingFonts.has(font.family);
-              const isSelected = font.family === currentFamily;
+            {Array.isArray(visibleFonts) &&
+              visibleFonts.map((font, index) => {
+                const globalIndex = hasRecentFonts ? state.recentFonts.length + index : index;
+                const isHighlighted = globalIndex === state.highlightedIndex;
+                const isLoading = state.loadingFonts.has(font.family);
+                const isSelected = font.family === selectedFontFamily;
 
-              return (
-                <div
-                  key={font.family}
-                  className={cn(
-                    'px-3 py-2 cursor-pointer hover:bg-blue-50 flex items-center justify-between',
-                    isHighlighted && 'bg-blue-100',
-                    isSelected && 'bg-blue-50',
-                  )}
-                  onClick={() => handleFontSelect(font.family)}
-                  onMouseEnter={() =>
-                    setState((prev) => ({ ...prev, highlightedIndex: globalIndex }))
-                  }
-                  role='option'
-                  aria-selected={isSelected}
-                  style={{ height: ITEM_HEIGHT }}
-                >
-                  <div className='flex items-center gap-2 min-w-0 flex-1'>
-                    <span
-                      className={cn('text-sm truncate', isLoading && 'text-neutral-400')}
-                      style={{
-                        fontFamily: isLoading ? 'system-ui' : font.family,
-                        fontSize: FONT_PREVIEW_SIZE,
-                      }}
-                    >
-                      {font.family}
-                    </span>
-                    {isLoading && (
-                      <Loader2 className='w-4 h-4 text-neutral-400 animate-spin flex-shrink-0' />
+                return (
+                  <div
+                    key={font.family}
+                    className={cn(
+                      'px-3 py-2 cursor-pointer hover:bg-blue-50 flex items-center justify-between',
+                      isHighlighted && 'bg-blue-100',
+                      isSelected && 'bg-blue-50',
                     )}
+                    onClick={() => handleFontSelect(font.family)}
+                    onMouseEnter={() =>
+                      setState((prev) => ({ ...prev, highlightedIndex: globalIndex }))
+                    }
+                    role='option'
+                    aria-selected={isSelected}
+                    style={{ height: ITEM_HEIGHT }}
+                  >
+                    <div className='flex items-center gap-2 min-w-0 flex-1'>
+                      <span
+                        className={cn('text-sm truncate', isLoading && 'text-neutral-400')}
+                        style={{
+                          fontFamily: isLoading ? 'system-ui' : font.family,
+                          fontSize: FONT_PREVIEW_SIZE,
+                        }}
+                      >
+                        {font.family}
+                      </span>
+                      {isLoading && (
+                        <Loader2 className='w-4 h-4 text-neutral-400 animate-spin flex-shrink-0' />
+                      )}
+                    </div>
+                    {isSelected && <Check className='w-4 h-4 text-blue-600 flex-shrink-0' />}
                   </div>
-                  {isSelected && <Check className='w-4 h-4 text-blue-600 flex-shrink-0' />}
-                </div>
-              );
-            })}
+                );
+              })}
 
             {/* Empty State */}
-            {filteredFonts.length === 0 && state.searchQuery && (
+            {Array.isArray(filteredFonts) && filteredFonts.length === 0 && state.searchQuery && (
               <div className='px-3 py-4 text-center text-sm text-neutral-500'>
                 No fonts match '{state.searchQuery}'
               </div>

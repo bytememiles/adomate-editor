@@ -13,6 +13,7 @@ import {
 } from '@/store';
 import { type Background } from '@/types';
 import { Copy, Redo2, Trash2, Undo2, ZoomIn, ZoomOut } from 'lucide-react';
+import Canvas from '@/components/editor/Canvas';
 
 interface CanvasWorkspaceProps {
   background: Background;
@@ -26,43 +27,9 @@ export default function CanvasWorkspace({ background, selectedId }: CanvasWorksp
   const canRedo = useAppSelector(selectCanRedo);
 
   return (
-    <div
-      className='h-full flex items-center justify-center p-8 bg-checkerboard'
-      style={{ width: 'calc(100vw - 340px)' }}
-    >
-      {/* Background Image Display */}
-      {background && (
-        <div
-          className='relative bg-white shadow-lg'
-          style={{
-            width: background.displayWidth,
-            height: background.displayHeight,
-          }}
-        >
-          <img
-            src={background.src}
-            alt='Background'
-            className='w-full h-full object-cover'
-            style={{
-              width: background.displayWidth,
-              height: background.displayHeight,
-            }}
-          />
-
-          {/* Canvas Overlay for Future Text Layers */}
-          <div className='absolute inset-0 pointer-events-none'>
-            {/* Text layers will be rendered here in the future */}
-          </div>
-        </div>
-      )}
-
-      {/* Fallback when no background */}
-      {!background && (
-        <div className='text-center text-neutral-500'>
-          <p className='text-sm'>Canvas Area</p>
-          <p className='text-xs'>Upload an image to get started</p>
-        </div>
-      )}
+    <div className='flex-1 relative'>
+      {/* Canvas with Text Layers */}
+      <Canvas background={background} scale={canvas.zoom / 100} />
 
       {/* Floating Object Toolbar - Only visible when something is selected */}
       {selectedId && (

@@ -19,7 +19,6 @@ export default function EditorPage() {
     handleFileDelete,
     handleUploadNew,
     handleClearAll,
-    handleTextUpdate,
     maxFiles,
     maxStorageSize,
   } = useEditor();
@@ -40,13 +39,10 @@ export default function EditorPage() {
 
   return (
     <div className='min-h-screen bg-neutral-50 text-neutral-900 flex'>
-      {/* Desktop-only warning */}
-      <DesktopWarning />
-
       {/* Main content - only visible on desktop */}
       <div className='hidden lg:flex lg:flex-col lg:flex-1 relative'>
         {/* 1. Top Text Toolbar */}
-        <EditorToolbar selectedId={selectedId} onTextUpdate={handleTextUpdate} />
+        <EditorToolbar selectedId={selectedId} />
 
         {/* 2. Canvas Workspace Area */}
         <div className='flex-1 relative'>

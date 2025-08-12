@@ -67,12 +67,6 @@ export function useEditor() {
     setUploadedFiles([]);
   }, [setUploadedFiles]);
 
-  // Handle text layer updates
-  const handleTextUpdate = useCallback((id: string, updates: any) => {
-    // TODO: Implement text layer updates
-    console.log('Text update:', id, updates);
-  }, []);
-
   return {
     uploadedFiles,
     selectedId,
@@ -81,7 +75,6 @@ export function useEditor() {
     handleFileDelete,
     handleUploadNew,
     handleClearAll,
-    handleTextUpdate,
     maxFiles: STORAGE_LIMITS.MAX_FILES,
     maxStorageSize: STORAGE_LIMITS.MAX_STORAGE_SIZE,
   };

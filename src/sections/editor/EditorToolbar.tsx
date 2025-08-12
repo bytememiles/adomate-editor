@@ -28,29 +28,102 @@ import FontSizeSelector from '@/components/editor/FontSizeSelector';
 
 interface EditorToolbarProps {
   selectedId: string | null;
-  onTextUpdate: (id: string, updates: any) => void;
 }
 
-export default function EditorToolbar({ selectedId, onTextUpdate }: EditorToolbarProps) {
+export default function EditorToolbar({ selectedId }: EditorToolbarProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const doc = useAppSelector(selectDoc);
 
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('left');
+  const [presetFont, setPresetFont] = useState({
+    family: 'Arial',
+    size: 16,
+    weight: 400,
+    color: '#000000',
+    align: 'left' as 'left' | 'center' | 'right',
+  });
 
   // Get selected text layer
   const selectedTextLayer = selectedId ? doc.layers.find((l) => l.id === selectedId) : null;
+
+  // Handle text update through Redux
+  const handleTextUpdate = useCallback(
+    (id: string, updates: any) => {
+      dispatch(updateLayer({ id, patch: updates }));
+    },
+    [dispatch],
+  );
 
   // Handle text alignment change
   const handleTextAlignChange = useCallback(
     (align: 'left' | 'center' | 'right') => {
       setTextAlign(align);
       if (selectedTextLayer) {
-        onTextUpdate(selectedTextLayer.id, { align });
+        handleTextUpdate(selectedTextLayer.id, { align });
       }
+      // Update preset for future text layers
+      setPresetFont((prev) => ({ ...prev, align }));
     },
-    [selectedTextLayer, onTextUpdate],
+    [selectedTextLayer, handleTextUpdate],
   );
+
+  // Handle font family change
+  const handleFontFamilyChange = useCallback(
+    (family: string) => {
+      if (selectedTextLayer) {
+        handleTextUpdate(selectedTextLayer.id, {
+          font: { ...selectedTextLayer.font, family },
+        });
+      }
+      // Update preset for future text layers
+      setPresetFont((prev) => ({ ...prev, family }));
+    },
+    [selectedTextLayer, handleTextUpdate],
+  );
+
+  // Handle font size change
+  const handleFontSizeChange = useCallback(
+    (size: number) => {
+      if (selectedTextLayer) {
+        handleTextUpdate(selectedTextLayer.id, {
+          font: { ...selectedTextLayer.font, size },
+        });
+      }
+      // Update preset for future text layers
+      setPresetFont((prev) => ({ ...prev, size }));
+    },
+    [selectedTextLayer, handleTextUpdate],
+  );
+
+  // Handle color change
+  const handleColorChange = useCallback(
+    (color: string) => {
+      if (selectedTextLayer) {
+        handleTextUpdate(selectedTextLayer.id, { fill: color });
+      }
+      // Update preset for future text layers
+      setPresetFont((prev) => ({ ...prev, color }));
+    },
+    [selectedTextLayer, handleTextUpdate],
+  );
+
+  // Handle adding text with preset attributes
+  const handleAddText = useCallback(() => {
+    dispatch(
+      addTextLayer({
+        font: {
+          family: presetFont.family,
+          size: presetFont.size,
+          weight: presetFont.weight,
+        },
+        fill: presetFont.color,
+        align: presetFont.align,
+        x: 100,
+        y: 100,
+      }),
+    );
+  }, [dispatch, presetFont]);
 
   return (
     <div className='sticky top-0 z-20 bg-white/80 backdrop-blur-sm border-b border-neutral-200 px-6 py-3'>
@@ -58,21 +131,25 @@ export default function EditorToolbar({ selectedId, onTextUpdate }: EditorToolba
         {/* Left Section: Text Editing Controls */}
         <div className='flex items-center gap-4'>
           {/* Font Family */}
-          <FontFamilySelector selectedId={selectedId} onTextUpdate={onTextUpdate} />
+          <FontFamilySelector
+            selectedId={selectedId}
+            currentFamily={selectedTextLayer?.font?.family || presetFont.family}
+            onFamilyChange={handleFontFamilyChange}
+          />
 
           {/* Font Size */}
           <FontSizeSelector
             selectedId={selectedId}
-            currentSize={selectedTextLayer?.font?.size || 16}
-            onTextUpdate={onTextUpdate}
+            currentSize={selectedTextLayer?.font?.size || presetFont.size}
+            onSizeChange={handleFontSizeChange}
           />
 
           {/* Color Picker */}
           <input
             type='color'
             className='w-8 h-8 border border-neutral-200 rounded cursor-pointer'
-            value={selectedTextLayer?.fill || '#000000'}
-            disabled={!selectedTextLayer}
+            value={selectedTextLayer?.fill || presetFont.color}
+            onChange={(e) => handleColorChange(e.target.value)}
             title='Text Color'
           />
 
@@ -83,7 +160,6 @@ export default function EditorToolbar({ selectedId, onTextUpdate }: EditorToolba
               tooltip='Align Left'
               active={textAlign === 'left'}
               onClick={() => handleTextAlignChange('left')}
-              disabled={!selectedTextLayer}
               compact
               square
             />
@@ -92,7 +168,6 @@ export default function EditorToolbar({ selectedId, onTextUpdate }: EditorToolba
               tooltip='Align Center'
               active={textAlign === 'center'}
               onClick={() => handleTextAlignChange('center')}
-              disabled={!selectedTextLayer}
               compact
               square
             />
@@ -101,7 +176,6 @@ export default function EditorToolbar({ selectedId, onTextUpdate }: EditorToolba
               tooltip='Align Right'
               active={textAlign === 'right'}
               onClick={() => handleTextAlignChange('right')}
-              disabled={!selectedTextLayer}
               compact
               square
             />
@@ -114,7 +188,7 @@ export default function EditorToolbar({ selectedId, onTextUpdate }: EditorToolba
             active={selectedTextLayer?.font?.weight === 700}
             onClick={() =>
               selectedTextLayer &&
-              onTextUpdate(selectedTextLayer.id, {
+              handleTextUpdate(selectedTextLayer.id, {
                 font: {
                   ...selectedTextLayer.font,
                   weight: selectedTextLayer.font.weight === 700 ? 400 : 700,
@@ -131,7 +205,7 @@ export default function EditorToolbar({ selectedId, onTextUpdate }: EditorToolba
             active={selectedTextLayer?.font?.style === 'italic'}
             onClick={() =>
               selectedTextLayer &&
-              onTextUpdate(selectedTextLayer.id, {
+              handleTextUpdate(selectedTextLayer.id, {
                 font: {
                   ...selectedTextLayer.font,
                   style: selectedTextLayer.font.style === 'italic' ? 'normal' : 'italic',
@@ -148,7 +222,7 @@ export default function EditorToolbar({ selectedId, onTextUpdate }: EditorToolba
             active={selectedTextLayer?.underline}
             onClick={() =>
               selectedTextLayer &&
-              onTextUpdate(selectedTextLayer.id, {
+              handleTextUpdate(selectedTextLayer.id, {
                 underline: !selectedTextLayer.underline,
               })
             }
@@ -162,7 +236,7 @@ export default function EditorToolbar({ selectedId, onTextUpdate }: EditorToolba
             active={selectedTextLayer?.strikethrough}
             onClick={() =>
               selectedTextLayer &&
-              onTextUpdate(selectedTextLayer.id, {
+              handleTextUpdate(selectedTextLayer.id, {
                 strikethrough: !selectedTextLayer.strikethrough,
               })
             }
@@ -177,7 +251,7 @@ export default function EditorToolbar({ selectedId, onTextUpdate }: EditorToolba
           <Button
             icon={Type}
             variant='primary'
-            onClick={() => dispatch(addTextLayer())}
+            onClick={handleAddText}
             tooltip='Add Text Layer'
             tooltipPosition='bottom'
             rounded

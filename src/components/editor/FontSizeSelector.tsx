@@ -8,7 +8,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 interface FontSizeSelectorProps {
   selectedId: string | null;
   currentSize: number;
-  onTextUpdate: (id: string, updates: any) => void;
+  onTextUpdate?: (id: string, updates: any) => void;
+  onSizeChange?: (size: number) => void;
 }
 
 const PRESET_SIZES = [
@@ -24,6 +25,7 @@ export default function FontSizeSelector({
   selectedId,
   currentSize,
   onTextUpdate,
+  onSizeChange,
 }: FontSizeSelectorProps) {
   const dispatch = useAppDispatch();
 
@@ -50,23 +52,29 @@ export default function FontSizeSelector({
   // Handle size selection
   const handleSizeSelect = useCallback(
     (size: number) => {
-      if (!selectedId) return;
-
       // Clamp size to valid range
       const clampedSize = Math.max(MIN_SIZE, Math.min(MAX_SIZE, size));
 
-      // Update the text layer
-      onTextUpdate(selectedId, {
-        font: { size: clampedSize },
-      });
+      // If there's a selected text layer, update it
+      if (selectedId && onTextUpdate) {
+        // Update the text layer
+        onTextUpdate(selectedId, {
+          font: { size: clampedSize },
+        });
 
-      // Commit to history
-      dispatch(commitSnapshot());
+        // Commit to history
+        dispatch(commitSnapshot());
+      }
+
+      // Always call the onSizeChange callback if provided (for presets)
+      if (onSizeChange) {
+        onSizeChange(clampedSize);
+      }
 
       // Close popup
       setState((prev) => ({ ...prev, isOpen: false }));
     },
-    [selectedId, onTextUpdate, dispatch],
+    [selectedId, onTextUpdate, onSizeChange, dispatch],
   );
 
   // Handle custom size input
@@ -152,8 +160,6 @@ export default function FontSizeSelector({
 
   // Handle input click to start editing
   const handleInputClick = useCallback(() => {
-    if (!selectedId) return;
-
     setState((prev) => ({
       ...prev,
       isOpen: false,
@@ -165,7 +171,7 @@ export default function FontSizeSelector({
       inputRef.current?.focus();
       inputRef.current?.select();
     }, 0);
-  }, [selectedId]);
+  }, []);
 
   // Close popup when clicking outside
   useEffect(() => {
@@ -217,10 +223,8 @@ export default function FontSizeSelector({
         className={cn(
           'w-16 px-2 py-1 border border-neutral-200 rounded text-sm text-center flex items-center justify-center gap-1',
           'hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
-          !selectedId && 'opacity-50 cursor-not-allowed',
         )}
-        onClick={() => selectedId && setState((prev) => ({ ...prev, isOpen: !prev.isOpen }))}
-        disabled={!selectedId}
+        onClick={() => setState((prev) => ({ ...prev, isOpen: !prev.isOpen }))}
         aria-label='Font size'
       >
         <span className='truncate'>{currentSize}</span>
@@ -245,6 +249,7 @@ export default function FontSizeSelector({
               onChange={(e) => handleCustomSizeChange(e.target.value)}
               onKeyDown={handleKeyDown}
               onBlur={handleCustomSizeBlur}
+              onClick={() => setState((prev) => ({ ...prev, isEditing: true }))}
               className='w-full px-2 py-1 border border-neutral-200 rounded text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1'
               min={MIN_SIZE}
               max={MAX_SIZE}
